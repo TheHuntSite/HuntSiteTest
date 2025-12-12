@@ -1,25 +1,51 @@
-// This script manages the click interaction to change images in inventory slots
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM fully loaded and parsed!");
 
-// Initialize the inventory state (using placeholder images)
-const inventory = Array(28).fill("placeholder.png"); // 28 slots, all empty initially
+    // Select all the inventory item images
+    const inventoryItems = document.querySelectorAll('.inventory-item');
+    console.log(`Found ${inventoryItems.length} inventory items.`);
+    console.log(inventoryItems); // Verify that elements are being selected correctly
 
-// Fetch the inventory grid elements
-const inventorySlots = document.querySelectorAll('.inventory-slot');
+    // Add click event listeners to each inventory item
+    inventoryItems.forEach((item, index) => {
+        console.log(`Adding click event listener to item #${index + 1}`);
+        
+        item.addEventListener('click', (e) => {
+            console.log(`Inventory item #${index + 1} clicked!`);
 
-// Function to change the image on click
-function changeImage(slotIndex) {
-    // Toggle between a placeholder and an actual item image (for now, we use placeholder)
-    const currentImage = inventory[slotIndex];
-    inventory[slotIndex] = currentImage === "placeholder.png" ? "item.png" : "placeholder.png";
+            const currentItem = e.target; // The clicked inventory item
+            const overlay = currentItem.nextElementSibling; // The overlay image (next sibling)
 
-    // Update the image in the corresponding slot
-    const slot = inventorySlots[slotIndex];
-    const imgElement = slot.querySelector('img');
-    imgElement.src = inventory[slotIndex];
-    imgElement.alt = inventory[slotIndex] === "placeholder.png" ? "Empty Slot" : "Item Slot";
-}
+            // Log to check the overlay's initial state before toggling
+            console.log(`Overlay initial display state: ${overlay.style.display}`);
 
-// Add event listeners for each slot
-inventorySlots.forEach((slot, index) => {
-    slot.addEventListener('click', () => changeImage(index));
+            // Toggle overlay visibility
+            if (overlay.style.display === 'none' || overlay.style.display === '') {
+                console.log('Showing overlay');
+                overlay.style.display = 'block'; // Show the overlay
+            } else {
+                console.log('Hiding overlay');
+                overlay.style.display = 'none'; // Hide the overlay
+            }
+
+            // Check if the overlay is actually displayed after the toggle
+            console.log(`Overlay new display state: ${overlay.style.display}`);
+        });
+    });
+
+    // Add click event listener to overlay items to hide them when clicked
+    const overlays = document.querySelectorAll('.overlay-item');
+    console.log(`Found ${overlays.length} overlay items.`);
+    overlays.forEach((overlay, index) => {
+        console.log(`Adding click event listener to overlay #${index + 1}`);
+        
+        overlay.addEventListener('click', (e) => {
+            console.log(`Overlay #${index + 1} clicked!`);
+            overlay.style.display = 'none'; // Hide the overlay when clicked
+            console.log(`Overlay #${index + 1} hidden: ${overlay.style.display}`);
+        });
+    });
+
+    // Log when the page is ready and event listeners are attached
+    console.log("Event listeners are now attached to all inventory items and overlays.");
 });
