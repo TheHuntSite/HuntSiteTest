@@ -1,8 +1,8 @@
-// Import necessary Firebase modules
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
-import { getDatabase, ref, set, onValue, get } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js';
+// Firebase imports (MODULE VERSION)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-// Your web app's Firebase configuration
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyDNSd6smxpEtppVuEhtRaC-19XcyPNglP0",
   authDomain: "huntsite-64e23.firebaseapp.com",
@@ -13,90 +13,76 @@ const firebaseConfig = {
   appId: "1:1063124348808:web:c9e835ad82edada18c143d"
 };
 
-// Initialize Firebase
+// Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Fetch initial overlay statuses from Firebase
+/* -----------------------------
+   FETCH INITIAL STATES
+--------------------------------*/
 function fetchInitialStatuses() {
-  const statusRef = ref(db, 'overlayStatus/');
+  const statusRef = ref(db, "overlayStatus");
+
   get(statusRef)
     .then(snapshot => {
-      if (snapshot.exists()) {
-        const statuses = snapshot.val();
-        console.log("Initial overlay statuses fetched from Firebase:", statuses);
-        updateOverlays(statuses);  // Update overlays based on fetched data
-      } else {
-        console.log("No overlay statuses found in Firebase.");
+      if (!snapshot.exists()) {
+        console.warn("No overlay data found");
+        return;
       }
+
+      updateOverlays(snapshot.val());
     })
-    .catch(error => {
-      console.error("Error fetching overlay statuses:", error);
-    });
+    .catch(err => console.error("Firebase read failed:", err));
 }
 
-// Update overlays based on fetched statuses
+/* -----------------------------
+   APPLY STATES TO DOM
+--------------------------------*/
 function updateOverlays(statuses) {
-  const overlayItems = document.querySelectorAll('.overlay-item');
-  console.log("Updating overlays based on statuses");
+  document.querySelectorAll(".overlay-item").forEach((overlay, index) => {
+    // Firebase is 1-based
+    const entry = statuses[index + 1];
+    const status = entry?.status ?? 0;
 
-  overlayItems.forEach((overlay, index) => {
-    const status = statuses[index];
-    // Convert 1 to 'enabled' and 0 to 'disabled'
-    if (status === 1) {
-      overlay.style.display = 'block'; // Show overlay
-    } else {
-      overlay.style.display = 'none'; // Hide overlay
-    }
-    console.log(`Overlay #${index} set to ${status === 1 ? 'enabled' : 'disabled'}`);
+    overlay.style.display = status === 1 ? "block" : "none";
+
+    console.log(`Overlay ${index}: ${status === 1 ? "ON" : "OFF"}`);
   });
 }
 
-// Send updated status to Firebase
-function updateStatusInFirebase(index, newStatus) {
-  const statusRef = ref(db, `overlayStatus/${index}`);
-  set(statusRef, newStatus)
-    .then(() => {
-      console.log(`Overlay status for item #${index} updated to ${newStatus === 1 ? 'enabled' : 'disabled'}`);
-    })
-    .catch((error) => {
-      console.error(`Error updating status for item #${index}:`, error);
-    });
+/* -----------------------------
+   WRITE TO FIREBASE
+--------------------------------*/
+function updateStatusInFirebase(index, status) {
+  const statusRef = ref(db, `overlayStatus/${index + 1}`);
+  set(statusRef, { status });
 }
 
-// Add click listener to inventory items
+/* -----------------------------
+   CLICK HANDLERS
+--------------------------------*/
 function addItemClickListeners() {
-  const inventoryItems = document.querySelectorAll('.inventory-item');
-  const overlayItems = document.querySelectorAll('.overlay-item');
+  document.querySelectorAll(".inventory-item").forEach(item => {
+    const index = Number(item.dataset.index);
 
-  console.log("Inventory items found:", inventoryItems.length);
-  console.log("Overlay items found:", overlayItems.length);
+    item.addEventListener("click", () => {
+      const overlay = document.querySelector(
+        `.overlay-item[data-index="${index}"]`
+      );
 
-  inventoryItems.forEach((item, index) => {
-    console.log(`Adding click event listener to item #${index + 1}`);
-    item.addEventListener('click', () => {
-      const overlay = document.querySelector(`.overlay-item[data-index="${index}"]`);
-      if (overlay) {
-        // Toggle overlay display
-        const currentStatus = overlay.style.display === 'none' ? 1 : 0; // Use 1 for enabled, 0 for disabled
-        overlay.style.display = currentStatus === 1 ? 'block' : 'none';
+      const isVisible = overlay.style.display === "block";
+      const newStatus = isVisible ? 0 : 1;
 
-        // Update status in Firebase
-        updateStatusInFirebase(index, currentStatus);
-      } else {
-        console.error(`Overlay for item #${index} not found!`);
-      }
+      overlay.style.display = newStatus ? "block" : "none";
+      updateStatusInFirebase(index, newStatus);
     });
   });
 }
 
-// Initialize app and listeners
-document.addEventListener('DOMContentLoaded', () => {
-  console.log("DOM fully loaded and parsed!");
-
-  // Fetch overlay statuses from Firebase when the page loads
+/* -----------------------------
+   INIT
+--------------------------------*/
+document.addEventListener("DOMContentLoaded", () => {
   fetchInitialStatuses();
-
-  // Add event listeners to inventory items
   addItemClickListeners();
 });
