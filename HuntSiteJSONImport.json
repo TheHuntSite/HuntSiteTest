@@ -1,88 +1,88 @@
 {
   "overlayStatus": {
     "1": {
-      "status": "disabled"
+      "status": 0
     },
     "2": {
-      "status": "disabled"
+      "status": 0
     },
     "3": {
-      "status": "disabled"
+      "status": 0
     },
     "4": {
-      "status": "disabled"
+      "status": 0
     },
     "5": {
-      "status": "disabled"
+      "status": 0
     },
     "6": {
-      "status": "disabled"
+      "status": 0
     },
     "7": {
-      "status": "disabled"
+      "status": 0
     },
     "8": {
-      "status": "disabled"
+      "status": 0
     },
     "9": {
-      "status": "disabled"
+      "status": 0
     },
     "10": {
-      "status": "disabled"
+      "status": 0
     },
     "11": {
-      "status": "disabled"
+      "status": 0
     },
     "12": {
-      "status": "disabled"
+      "status": 0
     },
     "13": {
-      "status": "disabled"
+      "status": 0
     },
     "14": {
-      "status": "disabled"
+      "status": 0
     },
     "15": {
-      "status": "disabled"
+      "status": 0
     },
     "16": {
-      "status": "disabled"
+      "status": 0
     },
     "17": {
-      "status": "disabled"
+      "status": 0
     },
     "18": {
-      "status": "disabled"
+      "status": 0
     },
     "19": {
-      "status": "disabled"
+      "status": 0
     },
     "20": {
-      "status": "disabled"
+      "status": 0
     },
     "21": {
-      "status": "disabled"
+      "status": 0
     },
     "22": {
-      "status": "disabled"
+      "status": 0
     },
     "23": {
-      "status": "disabled"
+      "status": 0
     },
     "24": {
-      "status": "disabled"
+      "status": 0
     },
     "25": {
-      "status": "disabled"
+      "status": 0
     },
     "26": {
-      "status": "disabled"
+      "status": 0
     },
     "27": {
-      "status": "disabled"
+      "status": 0
     },
     "28": {
-      "status": "disabled"
+      "status": 0
     }
   }
 }
