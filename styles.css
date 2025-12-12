@@ -1,7 +1,7 @@
 /* General styles for the body */
 body {
     background-color: black;
-    background-image: url('background.png');  /* Set the background image */
+    background-image: url('Background.png');  /* Set the background image */
     background-size: cover;  /* Make sure it covers the entire screen */
     background-position: center center;  /* Center the background image */
     background-repeat: no-repeat;  /* Prevent the image from repeating */
