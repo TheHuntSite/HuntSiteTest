@@ -1,51 +1,81 @@
+// Import necessary Firebase modules
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js';
+import { getDatabase, ref, set, onValue, get } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js';
+
+ // Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDNSd6smxpEtppVuEhtRaC-19XcyPNglP0",
+  authDomain: "huntsite-64e23.firebaseapp.com",
+  databaseURL: "https://huntsite-64e23-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "huntsite-64e23",
+  storageBucket: "huntsite-64e23.firebasestorage.app",
+  messagingSenderId: "1063124348808",
+  appId: "1:1063124348808:web:c9e835ad82edada18c143d"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+
+// DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM fully loaded and parsed!");
+    console.log('DOM fully loaded and parsed!');
 
-    // Select all the inventory item images
+    // Get all inventory items and overlay items
     const inventoryItems = document.querySelectorAll('.inventory-item');
-    console.log(`Found ${inventoryItems.length} inventory items.`);
-    console.log(inventoryItems); // Verify that elements are being selected correctly
+    const overlayItems = document.querySelectorAll('.overlay-item');
 
-    // Add click event listeners to each inventory item
+    console.log('Found inventory items:', inventoryItems);
+    console.log('Found overlay items:', overlayItems);
+
+    // Add event listeners to inventory items
     inventoryItems.forEach((item, index) => {
         console.log(`Adding click event listener to item #${index + 1}`);
-        
-        item.addEventListener('click', (e) => {
-            console.log(`Inventory item #${index + 1} clicked!`);
-
-            const currentItem = e.target; // The clicked inventory item
-            const overlay = currentItem.nextElementSibling; // The overlay image (next sibling)
-
-            // Log to check the overlay's initial state before toggling
-            console.log(`Overlay initial display state: ${overlay.style.display}`);
-
-            // Toggle overlay visibility
-            if (overlay.style.display === 'none' || overlay.style.display === '') {
-                console.log('Showing overlay');
-                overlay.style.display = 'block'; // Show the overlay
-            } else {
-                console.log('Hiding overlay');
-                overlay.style.display = 'none'; // Hide the overlay
-            }
-
-            // Check if the overlay is actually displayed after the toggle
-            console.log(`Overlay new display state: ${overlay.style.display}`);
+        item.addEventListener('click', () => {
+            console.log(`Item #${index + 1} clicked!`);
+            toggleOverlay(index + 1); // Toggle overlay for the clicked item
         });
     });
 
-    // Add click event listener to overlay items to hide them when clicked
-    const overlays = document.querySelectorAll('.overlay-item');
-    console.log(`Found ${overlays.length} overlay items.`);
-    overlays.forEach((overlay, index) => {
+    // Add event listeners to overlay items (to hide them on click)
+    overlayItems.forEach((overlay, index) => {
         console.log(`Adding click event listener to overlay #${index + 1}`);
-        
-        overlay.addEventListener('click', (e) => {
+        overlay.addEventListener('click', () => {
             console.log(`Overlay #${index + 1} clicked!`);
-            overlay.style.display = 'none'; // Hide the overlay when clicked
-            console.log(`Overlay #${index + 1} hidden: ${overlay.style.display}`);
+            toggleOverlay(index + 1); // Toggle overlay for the clicked item
         });
     });
 
-    // Log when the page is ready and event listeners are attached
-    console.log("Event listeners are now attached to all inventory items and overlays.");
+    // Set up initial overlay state from Firebase
+    setUpOverlays();
 });
+
+// Set up overlays by reading the data from Firebase
+function setUpOverlays() {
+    const overlaysRef = ref(database, 'overlays');
+    onValue(overlaysRef, (snapshot) => {
+        const overlays = snapshot.val();
+        console.log('Current overlay statuses:', overlays);
+
+        document.querySelectorAll('.inventory-item').forEach((item, index) => {
+            const overlayItem = document.querySelector(`#overlay-${index + 1}`);
+
+            // Show or hide the overlay based on Firebase data
+            if (overlays && overlays[index + 1]) {
+                overlayItem.style.display = 'block';  // Show overlay
+            } else {
+                overlayItem.style.display = 'none';  // Hide overlay
+            }
+        });
+    });
+}
+
+// Toggle the overlay (show/hide) when clicked
+function toggleOverlay(index) {
+    const overlayRef = ref(database, `overlays/${index}`);
+    get(overlayRef).then((snapshot) => {
+        const currentStatus = snapshot.val();
+        const newStatus = !currentStatus;  // Toggle the current status
+        set(overlayRef, newStatus); // Update the status in Firebase
+    });
+}
