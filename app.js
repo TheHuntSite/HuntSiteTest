@@ -5,10 +5,10 @@ import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebase
 /* -----------------------------
    FIREBASE CONFIG
 --------------------------------*/
-// Your web app's Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyC4-REmLiLySPPnvDvHeE3-lUP64iApC-o",
   authDomain: "huntsitetest.firebaseapp.com",
+  databaseURL: "https://huntsitetest-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "huntsitetest",
   storageBucket: "huntsitetest.firebasestorage.app",
   messagingSenderId: "738219939866",
