@@ -1,8 +1,15 @@
-// Firebase imports (MODULE VERSION)
+// Firebase imports (MODULAR SDK)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getDatabase, ref, set, get } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+import {
+  getDatabase,
+  ref,
+  set,
+  onValue
+} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-// Firebase configuration
+/* -----------------------------
+   FIREBASE CONFIG
+--------------------------------*/
 const firebaseConfig = {
   apiKey: "AIzaSyDNSd6smxpEtppVuEhtRaC-19XcyPNglP0",
   authDomain: "huntsite-64e23.firebaseapp.com",
@@ -13,47 +20,50 @@ const firebaseConfig = {
   appId: "1:1063124348808:web:c9e835ad82edada18c143d"
 };
 
-// Init Firebase
+/* -----------------------------
+   INIT FIREBASE
+--------------------------------*/
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 /* -----------------------------
-   FETCH INITIAL STATES
---------------------------------*/
-function fetchInitialStatuses() {
-  const statusRef = ref(db, "overlayStatus");
-
-  get(statusRef)
-    .then(snapshot => {
-      if (!snapshot.exists()) {
-        console.warn("No overlay data found");
-        return;
-      }
-
-      updateOverlays(snapshot.val());
-    })
-    .catch(err => console.error("Firebase read failed:", err));
-}
-
-/* -----------------------------
-   APPLY STATES TO DOM
+   APPLY STATES TO UI
 --------------------------------*/
 function updateOverlays(statuses) {
+  console.log("[SYNC] Applying overlay states");
+
   document.querySelectorAll(".overlay-item").forEach((overlay, index) => {
-    // Firebase is 1-based
-    const entry = statuses[index + 1];
+    const entry = statuses?.[index + 1];
     const status = entry?.status ?? 0;
 
     overlay.style.display = status === 1 ? "block" : "none";
-
-    console.log(`Overlay ${index}: ${status === 1 ? "ON" : "OFF"}`);
   });
 }
 
 /* -----------------------------
-   WRITE TO FIREBASE
+   REALTIME DATABASE LISTENER
+--------------------------------*/
+function listenForOverlayChanges() {
+  const statusRef = ref(db, "overlayStatus");
+
+  console.log("[LISTEN] Listening for overlay changes");
+
+  onValue(statusRef, snapshot => {
+    if (!snapshot.exists()) {
+      console.warn("[LISTEN] No overlay data found");
+      return;
+    }
+
+    updateOverlays(snapshot.val());
+  });
+}
+
+/* -----------------------------
+   WRITE STATUS TO FIREBASE
 --------------------------------*/
 function updateStatusInFirebase(index, status) {
+  console.log(`[WRITE] index=${index}, status=${status}`);
+
   const statusRef = ref(db, `overlayStatus/${index + 1}`);
   set(statusRef, { status });
 }
@@ -62,35 +72,45 @@ function updateStatusInFirebase(index, status) {
    CLICK HANDLERS
 --------------------------------*/
 function addItemClickListeners() {
+  console.log("[INIT] Attaching click handlers");
+
   document.querySelectorAll(".item-container").forEach(container => {
-    const index = Number(
-      container.querySelector(".inventory-item").dataset.index
-    );
+    const inventoryItem = container.querySelector(".inventory-item");
+    const index = Number(inventoryItem.dataset.index);
 
     container.addEventListener("click", (event) => {
-      console.log(`[CLICK] Container clicked`, { index, target: event.target });
+      console.log("[CLICK]", { index, target: event.target });
 
       const overlay = document.querySelector(
         `.overlay-item[data-index="${index}"]`
       );
 
+      if (!overlay) {
+        console.error(`[ERROR] Overlay not found for index ${index}`);
+        return;
+      }
+
       const isVisible = overlay.style.display === "block";
       const newStatus = isVisible ? 0 : 1;
 
       console.log(
-        `[TOGGLE] index=${index}, ${isVisible ? "ON → OFF" : "OFF → ON"}`
+        `[TOGGLE] index=${index} ${isVisible ? "ON → OFF" : "OFF → ON"}`
       );
 
+      // Optimistic UI update
       overlay.style.display = newStatus ? "block" : "none";
+
       updateStatusInFirebase(index, newStatus);
     });
   });
 }
 
 /* -----------------------------
-   INIT
+   INIT APP
 --------------------------------*/
 document.addEventListener("DOMContentLoaded", () => {
-  fetchInitialStatuses();
-  addItemClickListeners();
+  console.log("[INIT] DOM ready");
+
+  listenForOverlayChanges();   // Realtime sync
+  addItemClickListeners();     // Local interaction
 });
