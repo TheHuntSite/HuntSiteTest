@@ -1,11 +1,6 @@
-// Firebase imports (MODULAR SDK)
+// Firebase imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import {
-  getDatabase,
-  ref,
-  set,
-  onValue
-} from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
 /* -----------------------------
    FIREBASE CONFIG
@@ -27,33 +22,24 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 /* -----------------------------
-   APPLY STATES TO UI
+   UPDATE UI FROM DATABASE
 --------------------------------*/
 function updateOverlays(statuses) {
-  console.log("[SYNC] Applying overlay states");
-
   document.querySelectorAll(".overlay-item").forEach((overlay, index) => {
     const entry = statuses?.[index + 1];
     const status = entry?.status ?? 0;
-
     overlay.style.display = status === 1 ? "block" : "none";
   });
 }
 
 /* -----------------------------
-   REALTIME DATABASE LISTENER
+   REALTIME LISTENER
 --------------------------------*/
 function listenForOverlayChanges() {
   const statusRef = ref(db, "overlayStatus");
 
-  console.log("[LISTEN] Listening for overlay changes");
-
   onValue(statusRef, snapshot => {
-    if (!snapshot.exists()) {
-      console.warn("[LISTEN] No overlay data found");
-      return;
-    }
-
+    if (!snapshot.exists()) return;
     updateOverlays(snapshot.val());
   });
 }
@@ -62,8 +48,6 @@ function listenForOverlayChanges() {
    WRITE STATUS TO FIREBASE
 --------------------------------*/
 function updateStatusInFirebase(index, status) {
-  console.log(`[WRITE] index=${index}, status=${status}`);
-
   const statusRef = ref(db, `overlayStatus/${index + 1}`);
   set(statusRef, { status });
 }
@@ -72,45 +56,27 @@ function updateStatusInFirebase(index, status) {
    CLICK HANDLERS
 --------------------------------*/
 function addItemClickListeners() {
-  console.log("[INIT] Attaching click handlers");
-
   document.querySelectorAll(".item-container").forEach(container => {
     const inventoryItem = container.querySelector(".inventory-item");
     const index = Number(inventoryItem.dataset.index);
 
-    container.addEventListener("click", (event) => {
-      console.log("[CLICK]", { index, target: event.target });
-
-      const overlay = document.querySelector(
-        `.overlay-item[data-index="${index}"]`
-      );
-
-      if (!overlay) {
-        console.error(`[ERROR] Overlay not found for index ${index}`);
-        return;
-      }
+    container.addEventListener("click", () => {
+      const overlay = container.querySelector(".overlay-item");
+      if (!overlay) return;
 
       const isVisible = overlay.style.display === "block";
       const newStatus = isVisible ? 0 : 1;
 
-      console.log(
-        `[TOGGLE] index=${index} ${isVisible ? "ON → OFF" : "OFF → ON"}`
-      );
-
-      // Optimistic UI update
-      overlay.style.display = newStatus ? "block" : "none";
-
+      // Only write to Firebase, let onValue handle UI
       updateStatusInFirebase(index, newStatus);
     });
   });
 }
 
 /* -----------------------------
-   INIT APP
+   INIT
 --------------------------------*/
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("[INIT] DOM ready");
-
-  listenForOverlayChanges();   // Realtime sync
-  addItemClickListeners();     // Local interaction
+  listenForOverlayChanges();   // LIVE SYNC
+  addItemClickListeners();     // attach click handlers
 });
