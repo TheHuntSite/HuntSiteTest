@@ -62,16 +62,24 @@ function updateStatusInFirebase(index, status) {
    CLICK HANDLERS
 --------------------------------*/
 function addItemClickListeners() {
-  document.querySelectorAll(".inventory-item").forEach(item => {
-    const index = Number(item.dataset.index);
+  document.querySelectorAll(".item-container").forEach(container => {
+    const index = Number(
+      container.querySelector(".inventory-item").dataset.index
+    );
 
-    item.addEventListener("click", () => {
+    container.addEventListener("click", (event) => {
+      console.log(`[CLICK] Container clicked`, { index, target: event.target });
+
       const overlay = document.querySelector(
         `.overlay-item[data-index="${index}"]`
       );
 
       const isVisible = overlay.style.display === "block";
       const newStatus = isVisible ? 0 : 1;
+
+      console.log(
+        `[TOGGLE] index=${index}, ${isVisible ? "ON → OFF" : "OFF → ON"}`
+      );
 
       overlay.style.display = newStatus ? "block" : "none";
       updateStatusInFirebase(index, newStatus);
