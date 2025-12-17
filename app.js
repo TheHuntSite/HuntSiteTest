@@ -1,6 +1,6 @@
-// Firebase imports (modular SDK)
+// Firebase imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
 /* -----------------------------
    CONFIG
@@ -41,14 +41,12 @@ function buildInventoryGrid() {
 
     const item = document.createElement("img");
     item.src = `inv_${i + 1}.png`;
-    item.alt = `Item ${i + 1}`;
     item.className = "inventory-item";
     item.dataset.index = i;
     item.draggable = false;
 
     const overlay = document.createElement("img");
     overlay.src = "overlay.png";
-    overlay.alt = `Overlay ${i + 1}`;
     overlay.className = "overlay-item";
     overlay.dataset.index = i;
     overlay.draggable = false;
@@ -90,43 +88,36 @@ function listenForTeamName() {
     if (!snapshot.exists()) return;
 
     const teamName = snapshot.val();
-
-    // Update browser tab title
     document.title = teamName;
 
-    // Update visible page title
     const h1 = document.getElementById("team-title");
-    if (h1) {
-      h1.textContent = teamName;
-    }
+    if (h1) h1.textContent = teamName;
   });
 }
 
 /* -----------------------------
-   WRITE STATUS TO FIREBASE
+   ATOMIC TOGGLE (IMPORTANT)
 --------------------------------*/
-function updateStatusInFirebase(index, status) {
+function toggleOverlayInFirebase(index) {
   const statusRef = ref(db, `overlayStatus/${index + 1}`);
-  set(statusRef, { status });
+
+  runTransaction(statusRef, currentData => {
+    const currentStatus = currentData?.status ?? 0;
+    return { status: currentStatus === 1 ? 0 : 1 };
+  });
 }
 
 /* -----------------------------
-   CLICK HANDLERS
+   INPUT HANDLERS (FAST SAFE)
 --------------------------------*/
 function addItemClickListeners() {
   document.querySelectorAll(".item-container").forEach(container => {
     const inventoryItem = container.querySelector(".inventory-item");
     const index = Number(inventoryItem.dataset.index);
 
-    container.addEventListener("click", () => {
-      const overlay = container.querySelector(".overlay-item");
-      if (!overlay) return;
-
-      const isVisible = overlay.style.display === "block";
-      const newStatus = isVisible ? 0 : 1;
-
-      // Write only — UI updates via realtime listener
-      updateStatusInFirebase(index, newStatus);
+    container.addEventListener("pointerdown", e => {
+      e.preventDefault(); // prevents drag/select edge cases
+      toggleOverlayInFirebase(index);
     });
   });
 }
@@ -135,8 +126,8 @@ function addItemClickListeners() {
    INIT
 --------------------------------*/
 document.addEventListener("DOMContentLoaded", () => {
-  buildInventoryGrid();        // Build grid dynamically
-  listenForOverlayChanges();   // Live overlay sync
-  addItemClickListeners();     // Click interaction
-  listenForTeamName();         // Live team name
+  buildInventoryGrid();
+  listenForOverlayChanges();
+  addItemClickListeners();
+  listenForTeamName();
 });
