@@ -1,4 +1,7 @@
 {
+  "siteConfig": {
+    "teamName": "Team Red"
+  },
   "overlayStatus": {
     "1": {
       "status": 0

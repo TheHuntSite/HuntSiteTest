@@ -44,6 +44,26 @@ function listenForOverlayChanges() {
   });
 }
 
+
+function listenForTeamName() {
+  const teamNameRef = ref(db, "siteConfig/teamName");
+
+  onValue(teamNameRef, snapshot => {
+    if (!snapshot.exists()) return;
+
+    const teamName = snapshot.val();
+
+    // Update browser tab title
+    document.title = teamName;
+
+    // Update visible page title if present
+    const h1 = document.getElementById("team-title");
+    if (h1) {
+      h1.textContent = teamName;
+    }
+  });
+}
+
 /* -----------------------------
    WRITE STATUS TO FIREBASE
 --------------------------------*/
@@ -79,4 +99,5 @@ function addItemClickListeners() {
 document.addEventListener("DOMContentLoaded", () => {
   listenForOverlayChanges();   // LIVE SYNC
   addItemClickListeners();     // attach click handlers
+  listenForTeamName();
 });
