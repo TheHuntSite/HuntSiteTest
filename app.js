@@ -1,6 +1,11 @@
-// Firebase imports
+// Firebase imports (modular SDK)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+/* -----------------------------
+   CONFIG
+--------------------------------*/
+const ITEM_COUNT = 28;
 
 /* -----------------------------
    FIREBASE CONFIG
@@ -22,6 +27,40 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 /* -----------------------------
+   BUILD INVENTORY GRID
+--------------------------------*/
+function buildInventoryGrid() {
+  const grid = document.getElementById("inventory-grid");
+
+  for (let i = 0; i < ITEM_COUNT; i++) {
+    const slot = document.createElement("div");
+    slot.className = "inventory-slot";
+
+    const container = document.createElement("div");
+    container.className = "item-container";
+
+    const item = document.createElement("img");
+    item.src = `inv_${i + 1}.png`;
+    item.alt = `Item ${i + 1}`;
+    item.className = "inventory-item";
+    item.dataset.index = i;
+    item.draggable = false;
+
+    const overlay = document.createElement("img");
+    overlay.src = "overlay.png";
+    overlay.alt = `Overlay ${i + 1}`;
+    overlay.className = "overlay-item";
+    overlay.dataset.index = i;
+    overlay.draggable = false;
+
+    container.appendChild(item);
+    container.appendChild(overlay);
+    slot.appendChild(container);
+    grid.appendChild(slot);
+  }
+}
+
+/* -----------------------------
    UPDATE UI FROM DATABASE
 --------------------------------*/
 function updateOverlays(statuses) {
@@ -33,7 +72,7 @@ function updateOverlays(statuses) {
 }
 
 /* -----------------------------
-   REALTIME LISTENER
+   REALTIME LISTENERS
 --------------------------------*/
 function listenForOverlayChanges() {
   const statusRef = ref(db, "overlayStatus");
@@ -43,7 +82,6 @@ function listenForOverlayChanges() {
     updateOverlays(snapshot.val());
   });
 }
-
 
 function listenForTeamName() {
   const teamNameRef = ref(db, "siteConfig/teamName");
@@ -56,7 +94,7 @@ function listenForTeamName() {
     // Update browser tab title
     document.title = teamName;
 
-    // Update visible page title if present
+    // Update visible page title
     const h1 = document.getElementById("team-title");
     if (h1) {
       h1.textContent = teamName;
@@ -87,7 +125,7 @@ function addItemClickListeners() {
       const isVisible = overlay.style.display === "block";
       const newStatus = isVisible ? 0 : 1;
 
-      // Only write to Firebase, let onValue handle UI
+      // Write only — UI updates via realtime listener
       updateStatusInFirebase(index, newStatus);
     });
   });
@@ -97,7 +135,8 @@ function addItemClickListeners() {
    INIT
 --------------------------------*/
 document.addEventListener("DOMContentLoaded", () => {
-  listenForOverlayChanges();   // LIVE SYNC
-  addItemClickListeners();     // attach click handlers
-  listenForTeamName();
+  buildInventoryGrid();        // Build grid dynamically
+  listenForOverlayChanges();   // Live overlay sync
+  addItemClickListeners();     // Click interaction
+  listenForTeamName();         // Live team name
 });
